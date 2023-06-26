@@ -1,4 +1,4 @@
-const { Thought } = require('../models');
+const {User, Thought } = require('../models');
 
 module.exports = {
     // get all thoughts
@@ -26,10 +26,11 @@ module.exports = {
     // create a new thought
     async createThought(req, res) {
         try {
+            console.log(req.body)
             const thought = await Thought.create(req.body);
             //push the created thought's _id to the associated user's thoughts array field
             const user = await User.findByIdAndUpdate(
-                { _id: req.body.userId },
+                req.body.userID,
                 { $push: { thoughts: thought._id } },
                 { new: true }
             );
@@ -45,7 +46,7 @@ module.exports = {
     // update a thought by id
     async updateThought(req, res) {
         try {
-            const thought = await Thought.findById(req.params.id);
+            const thought = await Thought.findByIdAndUpdate(req.params.id, { $set: req.body}, { new: true});
             !thought
                 ? res.status(404).json({ message: 'No thought with this id!' })
                 : res.json(thought);
@@ -87,8 +88,8 @@ module.exports = {
         try {
             const thought = await Thought.findByIdAndUpdate(
                 req.params.id,
-                { $pull: { reactions: { reactionId: req.params.reactionId } } },
-                { new: true, runValidators: true }
+                { $pull: { reactions: {_id: req.body.reactionId  } } },
+                { new: true}
             );
             !thought
                 ? res.status(404).json({ message: 'No thought with this id!' })
